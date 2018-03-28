@@ -1,0 +1,9 @@
+{
+    "host" : "adobetargetmobile.tt.omtrdc.net",
+    "client": "adobetargetmobile",
+    "secure": true,
+    "imsOrgId" : "B8A054D958807F770A495DD6@AdobeOrg",
+    "reportSuiteId": "adobetargetmobilewesteros",
+    "trackingServer": "adobetargetmobile.sc.omtrdc.net",
+    "trackingServerSecure": "adobetargetmobile.sc.omtrdc.net"
+}
