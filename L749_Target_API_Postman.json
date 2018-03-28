@@ -1,0 +1,909 @@
+{
+	"info": {
+		"_postman_id": "72332e87-55d8-6c99-63c1-4d3d3c548117",
+		"name": "L749 : Target API",
+		"description": "A collection for Target API Demo. Executes the following steps:\n1. Create an HTML Offer\n2. Create an A/B Test using the offer created in 1 and a AAM segment\n3. Deliver the test using Server Side Delivery API\n  . Validate in reports that a visit has been recorded\n4. Request the same test using the Batch Delivery API\n  . Note that you are using a different session ID\n5. Make another request for recording a visit\n  . Validate in reports that a visit has been recorded\n6. Use Server Side Delivery API for recommendations\n  . Validate in reports that a visit has been logged",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Authentication",
+			"description": "Authenticate to Adobe.io",
+			"item": [
+				{
+					"name": "Exchange JWT for Access token",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "6ecfc113-81a4-4111-9752-ac1c9bf51359",
+								"type": "text/javascript",
+								"exec": [
+									"var jsonData = JSON.parse(responseBody);",
+									"pm.environment.set(\"io_access_token\", jsonData.access_token);"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": ""
+						},
+						"url": {
+							"raw": "https://ims-na1.adobelogin.com/ims/exchange/jwt/?client_id={{io_api_key}}&client_secret={{io_client_secret}}&jwt_token={{io_jwt_token}}",
+							"protocol": "https",
+							"host": [
+								"ims-na1",
+								"adobelogin",
+								"com"
+							],
+							"path": [
+								"ims",
+								"exchange",
+								"jwt",
+								""
+							],
+							"query": [
+								{
+									"key": "client_id",
+									"value": "{{io_api_key}}"
+								},
+								{
+									"key": "client_secret",
+									"value": "{{io_client_secret}}"
+								},
+								{
+									"key": "jwt_token",
+									"value": "{{io_jwt_token}}"
+								}
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Create Offers and Activity",
+			"description": "Create Target Offers and an A/B Activity",
+			"item": [
+				{
+					"name": "Create HTML Offer - Default",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "34c7d47e-8cfe-403c-b300-62652d1fc7e6",
+								"type": "text/javascript",
+								"exec": [
+									"var jsonData = JSON.parse(responseBody);",
+									"pm.environment.set(\"target_offer_default\", jsonData.id);"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{io_access_token}}"
+							},
+							{
+								"key": "X-Api-Key",
+								"value": "{{io_api_key}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/vnd.adobe.target.v1+json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": " {\n \"name\": \"Demo HTML Offer\",\n \"content\": \"<div style=\\\"color:green; font-weight:bold\\\">The content of the offer for the default experience</div>\"\n }\n"
+						},
+						"url": {
+							"raw": "https://mc.adobe.io/{{target_client_code}}/target/offers/content",
+							"protocol": "https",
+							"host": [
+								"mc",
+								"adobe",
+								"io"
+							],
+							"path": [
+								"{{target_client_code}}",
+								"target",
+								"offers",
+								"content"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Create HTML Offer - B",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "6595bf63-da33-4d4b-b907-57b90994dc5b",
+								"type": "text/javascript",
+								"exec": [
+									"var jsonData = JSON.parse(responseBody);",
+									"pm.environment.set(\"target_offer_b\", jsonData.id);"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{io_access_token}}"
+							},
+							{
+								"key": "X-Api-Key",
+								"value": "{{io_api_key}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/vnd.adobe.target.v1+json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": " {\n \"name\": \"Demo HTML Offer B\",\n \"content\": \"<div style=\\\"color:red; font-weight:bold\\\">This is offer B</div>\"\n }\n"
+						},
+						"url": {
+							"raw": "https://mc.adobe.io/{{target_client_code}}/target/offers/content",
+							"protocol": "https",
+							"host": [
+								"mc",
+								"adobe",
+								"io"
+							],
+							"path": [
+								"{{target_client_code}}",
+								"target",
+								"offers",
+								"content"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "List offers",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{io_access_token}}"
+							},
+							{
+								"key": "X-Api-Key",
+								"value": "{{io_api_key}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/vnd.adobe.target.v1+json"
+							}
+						],
+						"body": {},
+						"url": {
+							"raw": "https://mc.adobe.io/{{target_client_code}}/target/offers?limit=10&sortBy=-id",
+							"protocol": "https",
+							"host": [
+								"mc",
+								"adobe",
+								"io"
+							],
+							"path": [
+								"{{target_client_code}}",
+								"target",
+								"offers"
+							],
+							"query": [
+								{
+									"key": "limit",
+									"value": "10"
+								},
+								{
+									"key": "sortBy",
+									"value": "-id"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Create AB Activity",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "f3dfc5e3-ffba-4dad-895c-ff6678856511",
+								"type": "text/javascript",
+								"exec": [
+									"var jsonData = JSON.parse(responseBody);",
+									"pm.environment.set(\"target_ab_activity_id\", jsonData.id);",
+									""
+								]
+							}
+						},
+						{
+							"listen": "prerequest",
+							"script": {
+								"id": "752f02bb-2848-49ca-b901-f7f28d7bc3a1",
+								"type": "text/javascript",
+								"exec": [
+									"var rnd = Math.floor((Math.random() * 10000) + 1);",
+									"var mbxname = \"demo-api-mbox-\" + rnd;",
+									"pm.environment.set(\"target_mbox_name\", mbxname);"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{io_access_token}}"
+							},
+							{
+								"key": "X-Api-Key",
+								"value": "{{io_api_key}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/vnd.adobe.target.v1+json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"Demo API Activity\",\n    \"state\": \"approved\",\n    \"priority\": 100,\n    \"locations\": {\n        \"mboxes\": [\n            {\n                \"locationLocalId\": 0,\n                \"name\": \"{{target_mbox_name}}\"\n            }\n        ]\n    },\n    \"experiences\": [\n        {\n            \"experienceLocalId\": 0,\n            \"name\": \"Experience A\",\n            \"visitorPercentage\": 40,\n            \"offerLocations\": [\n                {\n                    \"locationLocalId\": 0,\n                    \"offerId\": {{target_offer_default}}\n                }\n            ]\n        },\n        {\n            \"experienceLocalId\": 1,\n            \"name\": \"Experience B\",\n            \"visitorPercentage\": 60,\n            \"offerLocations\": [\n                {\n                    \"locationLocalId\": 0,\n                    \"offerId\": {{target_offer_b}}\n                }\n            ]\n        }\n    ],\n    \"metrics\": [\n        {\n            \"metricLocalId\": 12345,\n            \"name\": \"MY PRIMARY GOAL\",\n            \"conversion\": true,\n            \"mboxes\": [\n                {\n                    \"name\": \"{{target_mbox_name}}\",\n                    \"successEvent\": \"mbox_shown\"\n                }\n            ],\n            \"action\": {\n                \"type\": \"count_landings\"\n            }\n        }\n    ]\n}"
+						},
+						"url": {
+							"raw": "https://mc.adobe.io/{{target_client_code}}/target/activities/ab/",
+							"protocol": "https",
+							"host": [
+								"mc",
+								"adobe",
+								"io"
+							],
+							"path": [
+								"{{target_client_code}}",
+								"target",
+								"activities",
+								"ab",
+								""
+							]
+						},
+						"description": "We will use this activity for server side delivery."
+					},
+					"response": []
+				},
+				{
+					"name": "List Activities",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{io_access_token}}"
+							},
+							{
+								"key": "X-Api-Key",
+								"value": "{{io_api_key}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/vnd.adobe.target.v1+json"
+							}
+						],
+						"body": {},
+						"url": {
+							"raw": "https://mc.adobe.io/{{target_client_code}}/target/activities?limit=5&sortBy=-id",
+							"protocol": "https",
+							"host": [
+								"mc",
+								"adobe",
+								"io"
+							],
+							"path": [
+								"{{target_client_code}}",
+								"target",
+								"activities"
+							],
+							"query": [
+								{
+									"key": "limit",
+									"value": "5"
+								},
+								{
+									"key": "sortBy",
+									"value": "-id"
+								}
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Server Side Delivery",
+			"description": "Deliver an activity on the server side and view reports",
+			"item": [
+				{
+					"name": "Server Side Delivery API - User 1",
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"id": "bbab8bb5-6063-43a9-a7b3-95dad969febf",
+								"type": "text/javascript",
+								"exec": [
+									"var sessid1 = pm.environment.get(\"sessid1\");",
+									"",
+									"var uuid = require('uuid');",
+									"sessid1 = uuid.v4();",
+									"pm.environment.set(\"sessid1\", sessid1);  "
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "User-Agent",
+								"value": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_9_3) AppleWebKit/537.75.14 (KHTML, like Gecko) Version/7.0.3 Safari/7046A194A"
+							},
+							{
+								"key": "authorization",
+								"value": "{{target_debug_auth_token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"mbox\" : \"{{target_mbox_name}}\",\n  \"mboxTrace\" : true,\n  \"clientSideAnalyticsLogging\" : true,\n  \"thirdPartyId\" : \"{{sessid1}}\",\n  \"profileParameters\" : {  \n    \"param1\" : \"value1\",\n    \"param2\" : \"value2\",\n    \"entity.id\" : \"entityId\",\n    \"entity.name\" : \"entityName\"\n  },\n  \"mboxParameters\" : {\n    \"screenHeight\": 1057,\n    \"screenWidth\": 1920,\n    \"browserWidth\": 1040,\n    \"browserHeight\": 960,\n    \"browserTimeOffset\": 240,\n    \"colorDepth\": 24,\n    \"mboxXDomain\": \"enabled\",\n    \"userAgent\": \"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_12_3) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/59.0.3071.115 Safari/537.36\"\n  },\n  \"requestLocation\" : {\n    \"pageURL\" : \"http://demo/demo/store/\",\n    \"referrerURL\" : \"http://demo/demo/store/\",\n    \"ipAddress\" : \"128.10.10.1\",\n    \"impressionId\" : \"15989\",\n    \"host\" : \"staging-1\"\n  }\n}"
+						},
+						"url": {
+							"raw": "https://{{target_client_code}}.tt.omtrdc.net/rest/v1/mbox/{{sessid1}}?client={{target_client_code}}",
+							"protocol": "https",
+							"host": [
+								"{{target_client_code}}",
+								"tt",
+								"omtrdc",
+								"net"
+							],
+							"path": [
+								"rest",
+								"v1",
+								"mbox",
+								"{{sessid1}}"
+							],
+							"query": [
+								{
+									"key": "client",
+									"value": "{{target_client_code}}"
+								}
+							]
+						},
+						"description": "All Optional Inputs"
+					},
+					"response": []
+				},
+				{
+					"name": "Server Side Delivery API - User 2",
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"id": "fd67b505-27a8-4f71-8477-da20b9be929f",
+								"type": "text/javascript",
+								"exec": [
+									"var sessid2 = postman.getEnvironmentVariable(\"sessid2\");",
+									"",
+									"var uuid = require('uuid');",
+									"sessid2 = uuid.v4();",
+									"postman.setEnvironmentVariable(\"sessid2\", sessid2);  "
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "User-Agent",
+								"value": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_9_3) AppleWebKit/537.75.14 (KHTML, like Gecko) Version/7.0.3 Safari/7046A194A"
+							},
+							{
+								"key": "authorization",
+								"value": "{{target_debug_auth_token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"mbox\" : \"{{target_mbox_name}}\",\n  \"mboxTrace\" : true,\n  \"clientSideAnalyticsLogging\" : true,\n  \"thirdPartyId\" : \"{{sessid2}}\",\n  \"profileParameters\" : {  \n    \"param1\" : \"value1\",\n    \"param2\" : \"value2\",\n    \"entity.id\" : \"entityId\",\n    \"entity.name\" : \"entityName\"\n  },\n  \"mboxParameters\" : {\n    \"screenHeight\": 1057,\n    \"screenWidth\": 1920,\n    \"browserWidth\": 1040,\n    \"browserHeight\": 960,\n    \"browserTimeOffset\": 240,\n    \"colorDepth\": 24,\n    \"mboxXDomain\": \"enabled\",\n    \"userAgent\": \"Mozilla/5.0 (Linux; U; Android 4.0.4; pt-br; MZ608 Build/7.7.1-141-7-FLEM-UMTS-LA) AppleWebKit/534.30 (KHTML, like Gecko) Version/4.0 Safari/534.30\"\n  },\n  \"requestLocation\" : {\n    \"pageURL\" : \"http://demo/demo/store/\",\n    \"referrerURL\" : \"http://demo/demo1/store/\",\n    \"ipAddress\" : \"129.11.12.1\",\n    \"impressionId\" : \"15990\",\n    \"host\" : \"staging-1\"\n  }\n}"
+						},
+						"url": {
+							"raw": "https://{{target_client_code}}.tt.omtrdc.net/rest/v1/mbox/{{sessid2}}?client={{target_client_code}}",
+							"protocol": "https",
+							"host": [
+								"{{target_client_code}}",
+								"tt",
+								"omtrdc",
+								"net"
+							],
+							"path": [
+								"rest",
+								"v1",
+								"mbox",
+								"{{sessid2}}"
+							],
+							"query": [
+								{
+									"key": "client",
+									"value": "{{target_client_code}}"
+								}
+							]
+						},
+						"description": "All Optional Inputs"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Report",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{io_access_token}}"
+							},
+							{
+								"key": "X-Api-Key",
+								"value": "{{io_api_key}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/vnd.adobe.target.v1+json"
+							}
+						],
+						"body": {},
+						"url": {
+							"raw": "https://mc.adobe.io/{{target_client_code}}/target/activities/ab/{{target_ab_activity_id}}/report/performance",
+							"protocol": "https",
+							"host": [
+								"mc",
+								"adobe",
+								"io"
+							],
+							"path": [
+								"{{target_client_code}}",
+								"target",
+								"activities",
+								"ab",
+								"{{target_ab_activity_id}}",
+								"report",
+								"performance"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Server Side Prefetch",
+			"description": "Activities can be prefetched and notifcations triggered on specific user actions.",
+			"item": [
+				{
+					"name": "Create AB Activity - Batch",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "c8881203-4e77-49d2-8dd5-7ffc8cd93851",
+								"type": "text/javascript",
+								"exec": [
+									"var jsonData = JSON.parse(responseBody);",
+									"pm.environment.set(\"target_ab_activity_batch_id\", jsonData.id);"
+								]
+							}
+						},
+						{
+							"listen": "prerequest",
+							"script": {
+								"id": "ff627bd0-6946-41fb-b702-9ce71b3cd0ae",
+								"type": "text/javascript",
+								"exec": [
+									"var rnd = Math.floor((Math.random() * 10000) + 1);",
+									"var mbxname = \"demo-batch-api-mbox-\" + rnd;",
+									"pm.environment.set(\"target_mbox_batch_name\", mbxname);"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{io_access_token}}"
+							},
+							{
+								"key": "X-Api-Key",
+								"value": "{{io_api_key}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/vnd.adobe.target.v1+json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"Demo API Batch Activity\",\n    \"state\": \"approved\",\n    \"priority\": 100,\n    \"locations\": {\n        \"mboxes\": [\n            {\n                \"locationLocalId\": 0,\n                \"name\": \"{{target_mbox_batch_name}}\"\n            }\n        ]\n    },\n    \"experiences\": [\n        {\n            \"experienceLocalId\": 0,\n            \"name\": \"Experience A\",\n            \"visitorPercentage\": 40,\n            \"offerLocations\": [\n                {\n                    \"locationLocalId\": 0,\n                    \"offerId\": {{target_offer_default}}\n                }\n            ]\n        },\n        {\n            \"experienceLocalId\": 1,\n            \"name\": \"Experience B\",\n            \"visitorPercentage\": 60,\n            \"offerLocations\": [\n                {\n                    \"locationLocalId\": 0,\n                    \"offerId\": {{target_offer_b}}\n                }\n            ]\n        }\n    ],\n    \"metrics\": [\n        {\n            \"metricLocalId\": 12345,\n            \"name\": \"MY PRIMARY GOAL\",\n            \"conversion\": true,\n            \"mboxes\": [\n                {\n                    \"name\": \"{{target_mbox_batch_name}}\",\n                    \"successEvent\": \"mbox_shown\"\n                }\n            ],\n            \"action\": {\n                \"type\": \"count_landings\"\n            }\n        }\n    ]\n}"
+						},
+						"url": {
+							"raw": "https://mc.adobe.io/{{target_client_code}}/target/activities/ab/",
+							"protocol": "https",
+							"host": [
+								"mc",
+								"adobe",
+								"io"
+							],
+							"path": [
+								"{{target_client_code}}",
+								"target",
+								"activities",
+								"ab",
+								""
+							]
+						},
+						"description": "We will use this activity for server side batch delivery."
+					},
+					"response": []
+				},
+				{
+					"name": "Batch Delivery - Content Prefetch - User 1",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "d8b5aeee-47f4-4858-9dbe-ae5bd80ab88c",
+								"type": "text/javascript",
+								"exec": [
+									"var jsonData = JSON.parse(responseBody);",
+									"pm.environment.set(\"target_batch_user_1_notif_token\", jsonData.prefetchResponses.eventTokens);"
+								]
+							}
+						},
+						{
+							"listen": "prerequest",
+							"script": {
+								"id": "32356d3d-b865-4205-8231-c33d5f73bbcb",
+								"type": "text/javascript",
+								"exec": [
+									"var sessid3 = pm.environment.get(\"sessid3\");",
+									"",
+									"var uuid = require('uuid');",
+									"sessid3 = uuid.v4();",
+									"pm.environment.set(\"sessid3\", sessid3);  "
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "User-Agent",
+								"value": "Mozilla/5.0 (Linux; U; Android 4.0.3; ko-kr; LG-L160L Build/IML74K) AppleWebkit/534.30 (KHTML, like Gecko) Version/4.0 Mobile Safari/534.30"
+							},
+							{
+								"key": "authorization",
+								"value": "{{target_debug_auth_token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n   \"client\": \"{{target_client_code}}\",\n   \"trace\" : {\n  \"enabled\": true\n   },\n   \"id\": {\n    \"thirdPartyId\" : \"{{sessid3}}\"\n   },\n   \"environmentId\" : {{target_environmentId}},\n   \"profileParameters\" : {  \n    \"param1\" : \"value1\",\n    \"param2\" : \"value2\",\n    \"entity.id\" : \"entityId\",\n    \"entity.name\" : \"entityName\"\n   },\n   \"prefetch\": [\n       {\n         \"indexId\": 0,\n         \"mbox\": \"{{target_mbox_batch_name}}\",\n         \"parameters\" : {\n          \"screenHeight\": 1057,\n          \"screenWidth\": 1920,\n          \"browserWidth\": 1040,\n          \"browserHeight\": 960,\n          \"browserTimeOffset\": 240,\n          \"colorDepth\": 24,\n          \"mboxXDomain\": \"enabled\",\n          \"userAgent\": \"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_12_3) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/59.0.3071.115 Safari/537.36\"\n      }\n       }\n     ]\n}"
+						},
+						"url": {
+							"raw": "https://{{target_client_code}}.tt.omtrdc.net/rest/v2/batchmbox/",
+							"protocol": "https",
+							"host": [
+								"{{target_client_code}}",
+								"tt",
+								"omtrdc",
+								"net"
+							],
+							"path": [
+								"rest",
+								"v2",
+								"batchmbox",
+								""
+							]
+						},
+						"description": "All Optional Inputs"
+					},
+					"response": []
+				},
+				{
+					"name": "Batch Delivery - Notification - User 1",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "2461183e-3af9-4f05-b59b-eb97f5452db0",
+								"type": "text/javascript",
+								"exec": [
+									""
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "User-Agent",
+								"value": "Mozilla/5.0 (Linux; U; Android 4.0.3; ko-kr; LG-L160L Build/IML74K) AppleWebkit/534.30 (KHTML, like Gecko) Version/4.0 Mobile Safari/534.30"
+							},
+							{
+								"key": "authorization",
+								"value": "{{target_debug_auth_token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n   \"client\": \"{{target_client_code}}\",\n   \"trace\" : {\n  \"enabled\": true\n   },\n   \"id\": {\n    \"thirdPartyId\" : \"{{sessid3}}\"\n   },\n   \"environmentId\" : {{target_environmentId}},\n   \"notifications\": [{\n       \"timestamp\": {{$timestamp}},\n       \"mbox\": \"{{target_mbox_batch_name}}\",\n       \"parameters\": {\n          \"screenHeight\": 1057,\n          \"screenWidth\": 1920,\n          \"browserWidth\": 1040,\n          \"browserHeight\": 960,\n          \"browserTimeOffset\": 240,\n          \"colorDepth\": 24,\n          \"mboxXDomain\": \"enabled\",\n          \"userAgent\": \"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_12_3) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/59.0.3071.115 Safari/537.36\"\n       },\n       \"eventTokens\": [{{target_batch_user_1_notif_token}}]\n   }]\n}"
+						},
+						"url": {
+							"raw": "https://{{target_client_code}}.tt.omtrdc.net/rest/v2/batchmbox/",
+							"protocol": "https",
+							"host": [
+								"{{target_client_code}}",
+								"tt",
+								"omtrdc",
+								"net"
+							],
+							"path": [
+								"rest",
+								"v2",
+								"batchmbox",
+								""
+							]
+						},
+						"description": "All Optional Inputs"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Report - Batch",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{io_access_token}}"
+							},
+							{
+								"key": "X-Api-Key",
+								"value": "{{io_api_key}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/vnd.adobe.target.v1+json"
+							}
+						],
+						"body": {},
+						"url": {
+							"raw": "https://mc.adobe.io/{{target_client_code}}/target/activities/ab/{{target_ab_activity_batch_id}}/report/performance",
+							"protocol": "https",
+							"host": [
+								"mc",
+								"adobe",
+								"io"
+							],
+							"path": [
+								"{{target_client_code}}",
+								"target",
+								"activities",
+								"ab",
+								"{{target_ab_activity_batch_id}}",
+								"report",
+								"performance"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"id": "c9f0b80a-832f-4956-9218-61c1650a24fd",
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"id": "3a4b62c2-2beb-4fcd-9d88-8480c8377882",
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"id": "6527d629-8ad3-416f-bb30-0ced62f31f64",
+			"key": "target_client_code",
+			"value": "adobeapac91",
+			"type": "string",
+			"description": ""
+		},
+		{
+			"id": "88086612-0f67-4008-8aa1-08f43cce668d",
+			"key": "target_slimshady_client_code",
+			"value": "adobedemoapac91",
+			"type": "string",
+			"description": ""
+		},
+		{
+			"id": "eeca3325-244e-4dbd-bf3c-be7946207b2f",
+			"key": "io_api_key",
+			"value": "ff6c28c200074658abd2a4fc02b9e891",
+			"type": "string",
+			"description": ""
+		},
+		{
+			"id": "6239aa34-2736-40e2-98ef-d32a7bf33946",
+			"key": "io_client_secret",
+			"value": "13b1a071-f2ee-4422-9dcc-e97d18c8ba38",
+			"type": "string",
+			"description": ""
+		},
+		{
+			"id": "672b7e23-4128-41be-9e4f-065147b71650",
+			"key": "io_jwt_token",
+			"value": "eyJhbGciOiJSUzI1NiJ9.ew0KICAgICJleHAiOiAxNTIwNDMzOTY3LA0KICAgICJpc3MiOiAiOEFFQTM2QjQ1ODFCNTFDNzBBNDk1REUxQEFkb2JlT3JnIiwNCiAgICAic3ViIjogIjZBRTAzRjZDNUE5NzA5RUYwQTQ5NUNEQkB0ZWNoYWNjdC5hZG9iZS5jb20iLA0KICAgICJodHRwczovL2ltcy1uYTEuYWRvYmVsb2dpbi5jb20vcy9lbnRfbWFya2V0aW5nX3NkayI6IHRydWUsDQogICAgImF1ZCI6ICJodHRwczovL2ltcy1uYTEuYWRvYmVsb2dpbi5jb20vYy9mZjZjMjhjMjAwMDc0NjU4YWJkMmE0ZmMwMmI5ZTg5MSINCn0.m7WIoi7zEzpY-fSGjEqRPSC_mg4U4NAWdS3351yR9kCKbHBoPwgYShgSMRytxJK17jsRSy6Y942CLT2O9aiUOtNbjhqpmD8XEwXPwbRHyJ7FgmXYlNmZmkWU01BgPKvsKg7MdYyXJXp3zu--pcz-kYo1hdDx2BAe-QkFAB5ZG3Wfido4wssh-Vl6461QMm66mgc2sop6HTieB9KU5jBCbLo8gcJBeFWwUPgNs434HJLEMncqieBDXA4dGgls_QBvxZ3TaiqEjQYYjIgtzdjKN__rwbLt5MYSkZyEm-H4wFUolP8bLZ6jN80pkmDFE870NlQgL_ljUegKaXx7FqNnWA",
+			"type": "string",
+			"description": ""
+		},
+		{
+			"id": "94e8f582-32a9-4f53-bd13-b1937067adf9",
+			"key": "io_access_token",
+			"value": "",
+			"type": "string",
+			"description": ""
+		},
+		{
+			"id": "8a2ab873-c9a8-470e-8dc4-0c7f9d017258",
+			"key": "target_mbox_name",
+			"value": "demo-api-mbox",
+			"type": "string",
+			"description": ""
+		},
+		{
+			"id": "01498816-09c9-4a44-a562-be085be82da6",
+			"key": "target_mbox_batch_name",
+			"value": "demo-batch-api-mbox",
+			"type": "string",
+			"description": ""
+		},
+		{
+			"id": "468ec05b-a660-40d1-8a4b-61218978fae5",
+			"key": "target_environmentId",
+			"value": "8623",
+			"type": "string",
+			"description": ""
+		},
+		{
+			"id": "ac360f57-7acc-42eb-985f-689722cc8d53",
+			"key": "target_audience_id",
+			"value": "1709897",
+			"type": "string",
+			"description": ""
+		},
+		{
+			"id": "2fe23222-ccca-42b7-a776-937f926719a0",
+			"key": "aam_audience_id",
+			"value": "8112600",
+			"type": "string",
+			"description": ""
+		},
+		{
+			"id": "77d3cd3d-8427-4baa-8e33-0c3930f0092c",
+			"key": "target_debug_auth_token",
+			"value": "30eab1f9-b872-4a30-9ef4-a70536692d7e",
+			"type": "string",
+			"description": ""
+		},
+		{
+			"id": "69c62116-d608-44ce-8ddf-dc654a123486",
+			"key": "target_local_user_1_session_id",
+			"value": "AMP4F63BYHGAABN1GW7XVNT64NU21GVJ",
+			"type": "string",
+			"description": ""
+		},
+		{
+			"id": "f4aa17f4-f9bf-43be-baea-b4a21f39450d",
+			"key": "target_local_user_2_session_id",
+			"value": "Y9TWG3P9C9PS0HYEZ17GV41DXPN6UGDV",
+			"type": "string",
+			"description": ""
+		},
+		{
+			"id": "99100b2e-be7e-4151-a46b-6a55af31faed",
+			"key": "target_offer_default",
+			"value": "",
+			"type": "string",
+			"description": ""
+		},
+		{
+			"id": "7f3190e0-0dcb-4cb9-9bc4-715600cd35da",
+			"key": "target_offer_b",
+			"value": "",
+			"type": "string",
+			"description": ""
+		},
+		{
+			"id": "7e39318e-2c0e-48f5-ae8e-477fd3bc5aac",
+			"key": "target_ab_activity_id",
+			"value": "",
+			"type": "string",
+			"description": ""
+		},
+		{
+			"id": "1ae961cd-b578-4957-aef3-c2a438f3fd8b",
+			"key": "target_ab_activity_batch_id",
+			"value": "",
+			"type": "string",
+			"description": ""
+		},
+		{
+			"id": "fca9b762-771d-41c8-af5e-51ef222d5563",
+			"key": "target_batch_user_1_notif_token",
+			"value": "",
+			"type": "string",
+			"description": ""
+		}
+	]
+}
